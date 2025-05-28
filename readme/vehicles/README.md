@@ -1,6 +1,11 @@
 # patrol_system
 
 ```lua
+TODO: 
+    -vehicles\s name automatic detection
+```
+
+```lua
 Config = Config or {}
 Config.FuelSystem = '' ---@param fuel_script cdn-fuel | LegacyFuel
 

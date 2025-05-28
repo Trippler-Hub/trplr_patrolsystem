@@ -1,12 +1,11 @@
 RegisterNetEvent('patrol_system:client:menu', function(data)
+    local config = data.config
+    local spawn = data.spawn
+    local preview = data.preview
     if Menu == 'qb-menu' then
-        local config = data.config
-        local spawn = data.spawn
-        local preview = data.preview
-
         local Menu = {
             {
-                header = "patrol_system Vehicles",
+                header = "Patrols",
                 isMenuHeader = true,
             },
             {
@@ -23,7 +22,7 @@ RegisterNetEvent('patrol_system:client:menu', function(data)
             },
         }
         Menu[#Menu+1] = {
-            header = "Preview Vehicles",
+            header = "Preview Patrols",
             txt = "Next",
             params = {
                 event = "patrol_system:client:previewmenu",
@@ -48,43 +47,50 @@ RegisterNetEvent('patrol_system:client:menu', function(data)
         }
         exports['qb-menu']:openMenu(Menu)
     elseif Menu == 'ox_lib' then
-        local options = {}
+        local options = {
+            {
+                title = 'Police Vehicles',
+                description = 'Next',
+                onSelect = function()
+                    TriggerEvent('patrol_system:client:list', {
+                        config = config,
+                        spawn = spawn,
+                        preview = preview
+                    })
+                end
+            },
+            {
+                title = 'Preview Patrols',
+                description = 'Next',
+                onSelect = function()
+                    TriggerEvent('patrol_system:client:previewmenu', {
+                        config = config,
+                        preview = preview,
+                        spawn = spawn
+                    })
+                end
+            },
+            {
+                title = '⬅ Store Vehicle',
+                onSelect = function()
+                    TriggerEvent('patrol_system:client:return')
+                end
+            },
+            {
+                title = 'Close Menu',
+                onSelect = function()
+                    lib.hideContext()
+                end
+            }
+        }
 
-        if Option.Vehicles[config] then
-            for _, vehicle in ipairs(Option.Vehicles[config]) do
-                table.insert(options, {
-                    title = vehicle.vehiclename,
-                    description = "Preview: " .. vehicle.vehiclename,
-                    onSelect = function()
-                        TriggerEvent("patrol_system:client:preview", {
-                            vehicle = vehicle.vehicle,
-                            preview = preview,
-                        })
-                    end
-                })
-            end
-        else
-            print("Warning: No vehicles found for config: " .. json.encode(data))
-        end
-
-        table.insert(options, {
-            title = "⬅ Go Back",
-            onSelect = function()
-                TriggerEvent("patrol_system:client:menu", {
-                    config = config,
-                    spawn = spawn,
-                    preview = preview
-                })
-            end
-        })
-        
         lib.registerContext({
-            id = 'patrols_preview_menu',
-            title = "Preview Menu",
+            id = 'patrol_menu',
+            title = 'Patrols',
             options = options
         })
-        
-        lib.showContext('patrols_preview_menu')
+
+        lib.showContext('patrol_menu')
     end
 end)
 
@@ -143,31 +149,32 @@ RegisterNetEvent("patrol_system:client:list", function(data)
         end
         exports['qb-menu']:openMenu(vehicleMenu)
     elseif Menu == 'ox_lib' then
-        local vehicleOptions = {}
-        
-        vehicleOptions[#vehicleOptions+1] = {
-            title = "⬅ Go Back",
-            description = "Return to main menu",
-            onSelect = function()
-                TriggerEvent("patrol_system:client:menu", {config = config})
-            end
+        local options = {
+            {
+                title = '⬅ Go Back',
+                onSelect = function()
+                    TriggerEvent('patrol_system:client:menu', {
+                        config = config
+                    })
+                end
+            }
         }
-        
+
         if Option.Vehicles[config] then
             local playerJob = Core.Functions.GetPlayerData().job.name
             local playerGrade = Core.Functions.GetPlayerData().job.grade.level
-            
+
             for _, vehicle in ipairs(Option.Vehicles[config]) do
                 if vehicle.allowed and vehicle.allowed[playerJob] and playerGrade >= vehicle.allowed[playerJob] then
-                    local description = vehicle.Registerable
+                    local description = vehicle.Registerable 
                         and ("Get: " .. vehicle.vehiclename .. " For: " .. vehicle.price .. "$")
                         or ("Take Out " .. vehicle.vehiclename)
-                    
-                    vehicleOptions[#vehicleOptions+1] = {
+
+                    options[#options+1] = {
                         title = vehicle.vehiclename,
                         description = description,
                         onSelect = function()
-                            TriggerServerEvent("patrol_system:server:charge", {
+                            TriggerServerEvent('patrol_system:server:charge', {
                                 price = vehicle.price,
                                 vehiclename = vehicle.vehiclename,
                                 vehicle = vehicle.vehicle,
@@ -182,13 +189,13 @@ RegisterNetEvent("patrol_system:client:list", function(data)
         else
             print("Warning: No vehicles found for config: " .. tostring(config))
         end
-        
+
         lib.registerContext({
-            id = 'government_vehicles_menu',
+            id = 'vehicle_menu',
             title = 'Government Vehicles',
-            options = vehicleOptions
+            options = options
         })
-        
-        lib.showContext('government_vehicles_menu')
+
+        lib.showContext('vehicle_menu')
     end
 end)

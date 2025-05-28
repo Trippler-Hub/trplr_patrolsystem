@@ -31,8 +31,9 @@ AddEventHandler("patrol_system:client:spawn", function(vehicleModel, spawnCoords
                 SetVehicleMod(veh, 48, vehicleConfig.style.livery, false)
             end
         end
-
+        print(vehicleConfig.Registerable)
         if vehicleConfig.Registerable then
+            print(true)
             TriggerServerEvent("patrol_system:server:insert", props, vehicleModel, GetHashKey(vehicleModel), Core.Functions.GetPlate(veh))
         end
 
